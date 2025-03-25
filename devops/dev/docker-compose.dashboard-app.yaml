@@ -1,0 +1,64 @@
+version: '3.8'
+
+networks:
+  dashboard_app_network:
+    driver: bridge
+
+services:
+  db:
+    image: postgres:16
+    env_file:
+      - ../../apps/dashboard_app/.env.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+        - dashboard_app_network
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "postgres"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+
+  streamlit:
+    build:
+      context: ../../apps/dashboard_app
+    ports:
+      - "8501:8501"
+    env_file:
+      - ../../apps/dashboard_app/.env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../../apps/dashboard_app:/app
+    networks:
+      - dashboard_app_network
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "postgres"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+
+  backend:
+    build: 
+      context: ../../apps/dashboard_app
+      dockerfile: app.Dockerfile
+    restart: always
+    volumes:
+      - ../../apps/dashboard_app/:/src
+    env_file:
+      - ../../apps/dashboard_app/.env.dev
+    ports:
+      - "8000:8000"
+    networks:
+      - dashboard_app_network
+
+volumes:
+  postgres_data:
