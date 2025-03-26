@@ -39,12 +39,17 @@ jobs:
           poetry lock
           poetry install --no-root
 
-      - name: Prepare Environment File
+            - name: Prepare Environment File
         working-directory: ./apps/dashboard_app
         run: |
+          if [ ! -f .env.dev ]; then
+            echo ".env.dev not found! Exiting..."
+            exit 1
+          fi
           cp .env.dev .env
           sed -i 's/DB_HOST=db/DB_HOST=127.0.0.1/' .env
           sed -i 's/DB_PORT=5432/DB_PORT=5433/' .env
+
 
       - name: Wait for Database to be Ready
         run: |
