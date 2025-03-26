@@ -39,7 +39,7 @@ jobs:
           poetry lock
           poetry install --no-root
 
-            - name: Prepare Environment File
+      - name: Prepare Environment File  # <-- This was incorrectly indented
         working-directory: ./apps/dashboard_app
         run: |
           if [ ! -f .env.dev ]; then
